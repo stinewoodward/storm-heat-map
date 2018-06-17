@@ -100,7 +100,7 @@
         source: 'storms',
         minzoom: 5,
         paint: {
-          // increase the radius of the circle as the zoom level and dbh value increases
+          // increase the radius of the circle as the zoom level and property damage value increases
           'circle-radius': {
             property: 'DAMAGE_PROPERTY',
             type: 'exponential',
@@ -139,6 +139,7 @@
               }, 50],
             ]
           },
+          // assign colors to property damage values (manually assigned atm)
           'circle-color': {
             property: 'DAMAGE_PROPERTY',
             type: 'exponential',
@@ -153,6 +154,7 @@
           },
           'circle-stroke-color': 'white',
           'circle-stroke-width': 1,
+          // make the circle points fade in as heat map layer fades out
           'circle-opacity': {
             stops: [
               [5, 0],
@@ -162,16 +164,29 @@
         }
       });
 
-      map.on('click', 'storms-point', function(e) {
-        new mapboxgl.Popup()
-          .setLngLat(e.features[0].geometry.coordinates)
-          .setHTML('<b>Storm Type:</b> '
-            + e.features[0].properties.EVENT_TYPE
-            + '<br>'
-            + '<b>Property Damage in Thousands of USD:</b> '
-            + e.features[0].properties.DAMAGE_PROPERTY)
+      // create popup
+      var popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+      });
+
+
+      // create a popup to appear when user clicks circle point
+      map.on('mouseenter', 'storms-point', function(e) {
+
+        popup.setLngLat(e.features[0].geometry.coordinates)
+          .setHTML('<b>Storm Type:</b> ' +
+            e.features[0].properties.EVENT_TYPE +
+            '<br>' +
+            '<b>Property Damage in Thousands of USD:</b> ' +
+            e.features[0].properties.DAMAGE_PROPERTY)
           .addTo(map);
       });
+
+      map.on('mouseleave', 'storms-point', function(e) {
+        popup.remove();
+      });
+
     });
   </script>
 </body>
