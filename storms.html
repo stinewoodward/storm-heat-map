@@ -111,12 +111,28 @@
               }, 5],
               [{
                 zoom: 5,
+                value: 1
+              }, 6],
+              [{
+                zoom: 5,
+                value: 100
+              }, 8],
+              [{
+                zoom: 5,
                 value: 8000
               }, 10],
               [{
                 zoom: 22,
                 value: 0
               }, 20],
+              [{
+                zoom: 22,
+                value: 1
+              }, 25],
+              [{
+                zoom: 22,
+                value: 100
+              }, 40],
               [{
                 zoom: 22,
                 value: 8000
@@ -144,6 +160,17 @@
             ]
           }
         }
+      });
+
+      map.on('click', 'storms-point', function(e) {
+        new mapboxgl.Popup()
+          .setLngLat(e.features[0].geometry.coordinates)
+          .setHTML('<b>Storm Type:</b> '
+            + e.features[0].properties.EVENT_TYPE
+            + '<br>'
+            + '<b>Property Damage in Thousands of USD:</b> '
+            + e.features[0].properties.DAMAGE_PROPERTY)
+          .addTo(map);
       });
     });
   </script>
