@@ -3,10 +3,10 @@
 
 <head>
   <meta charset='utf-8' />
-  <title></title>
+  <title>Storm Events</title>
   <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
   <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+  <link href="https://api.mapbox.com/mapbox-assembly/v0.21.2/assembly.min.css" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -23,7 +23,22 @@
 </head>
 
 <body>
-  <div id='map'></div>
+  <div class='grid bg-gray-dark absolute h-full w-full'>
+    <div class='col col--12 border-b border--white color-white'>
+      <h1 class='txt-h2 mx36 my24 inline-block'>Property Damage by Storms in the USA, 2017</h1>
+      <p class='fr mr24 mt36'>Source: <a class='link' target='_blank' href='https://www.ncdc.noaa.gov/stormevents/ftp.jsp'>NOAA Storm Events Database</a></p>
+    </div>
+    <div class='col col--12 h-full relative'>
+      <div id='map' class='w-full h-full'></div>
+      <div id='legend' class='w180 bg-white absolute top right mt18 mr18 round shadow-darken10 px12 py12 txt-s none'>
+        <strong class='block mb6 txt-l'>Zones</strong>
+        <ul class='ul mb6'></ul>
+      </div>
+    </div>
+  </div>
+
+  <script async defer src="https://api.mapbox.com/mapbox-assembly/v0.21.2/assembly.js"></script>
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
   <script>
     mapboxgl.accessToken = 'pk.eyJ1Ijoic3RpbmV3b29kd2FyZCIsImEiOiJjamRqYTFkeGkxbWp4MzNwNGFqeWV4eXNoIn0.TeQcpE5u4tQ5zQGa983aJg';
     var map = new mapboxgl.Map({
