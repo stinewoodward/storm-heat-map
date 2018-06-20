@@ -21,4 +21,4 @@ mapshaper storm-events.csv -points x=LON y=LAT -o format=geojson storm-events.ge
 I also used excel to help process the data when I couldn't find the right mapshaper commands. I had to delete all features for which was there was no property damage data and for which there were no lat/lon coordinates.
 
 # mapping
-I used 
+I used the [Mapbox Heatmap Tutorial](https://www.mapbox.com/help/make-a-heatmap-with-mapbox-gl-js/) as the basis for this map. The heatmap tutorial is an intermediate tutorial that took me through the different options associated with heat maps. I manually chose the densities associated with the heat map colors and the radius of the circles underneath. I would like to create formal classifications for these in the future. 
