@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title>Storm Events</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+  <link href="https://api.mapbox.com/mapbox-assembly/v0.21.2/assembly.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class='grid bg-gray-dark absolute h-full w-full'>
+    <div class='col col--12 border-b border--white color-white'>
+      <h1 class='txt-h2 mx36 my24 inline-block'>Property Damage by Storms in the USA, 2017</h1>
+      <p class='fr mr24 mt36'>Source: <a class='link' target='_blank' href='https://www.ncdc.noaa.gov/stormevents/ftp.jsp'>NOAA Storm Events Database</a></p>
+    </div>
+    <div class='col col--12 h-full relative'>
+      <div id='map' class='w-full h-full'></div>
+      <div id='legend' class='w180 bg-white absolute top right mt18 mr18 round shadow-darken10 px12 py12 txt-s'>
+        <strong class='block mb6 txt-l'>Property Damage</strong>
+        <ul class='ul mb6'></ul>
+      </div>
+    </div>
+  </div>
+
+  <script async defer src="https://api.mapbox.com/mapbox-assembly/v0.21.2/assembly.js"></script>
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic3RpbmV3b29kd2FyZCIsImEiOiJjamRqYTFkeGkxbWp4MzNwNGFqeWV4eXNoIn0.TeQcpE5u4tQ5zQGa983aJg';
+    var map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/dark-v9',
+      center: [-95.7129, 37.0902],
+      zoom: 3.2
+    });
+
+    map.on('load', function() {
+
+      // load data
+      var storms = map.addSource('storms', {
+        type: 'geojson',
+        data: 'data/storm-events.geojson'
+      });
+
+      addHeatLayer(storms);
+      addCircleLayer(storms);
+      addInteraction(storms);
+      //addLegend(storms);
+    });
+
+    function addHeatLayer(storms) {
+      map.addLayer({
+        id: 'storms-heat',
+        type: 'heatmap',
+        source: 'storms',
+        maxzoom: 6,
+        paint: {
+          // increase weight as diameter breast height increases
+          'heatmap-weight': {
+            property: 'DAMAGE_PROPERTY',
+            type: 'exponential',
+            stops: [
+              [1, 0.1],
+              [500, 0.9],
+              [8000, 1]
+            ]
+          },
+          // increase intensity as zoom level increases
+          'heatmap-intensity': {
+            stops: [
+              [3, 1],
+              [5, 3]
+            ]
+          },
+          // assign color values be applied to points depending on their density
+          'heatmap-color': [
+            'interpolate', ['linear'],
+            ['heatmap-density'],
+            0, '#edf8fb',
+            0.01, '#bfd3e6',
+            0.1, '#9ebcda',
+            0.3, '#8c96c6',
+            0.5, '#8856a7',
+            0.8, '#810f7c'
+          ],
+          // increase radius as zoom increases
+          'heatmap-radius': {
+            stops: [
+              [3, 15],
+              [5, 20]
+            ]
+          },
+          // decrease opacity to transition into the circle layer
+          'heatmap-opacity': {
+            default: 1,
+            stops: [
+              [5, 1],
+              [6, 0]
+            ]
+          }
+        }
+      });
+    }
+
+    function addCircleLayer(storms) {
+      map.addLayer({
+        id: 'storms-point',
+        type: 'circle',
+        source: 'storms',
+        minzoom: 5,
+        paint: {
+          // increase the radius of the circle as the zoom level and property damage value increases
+          'circle-radius': {
+            property: 'DAMAGE_PROPERTY',
+            type: 'exponential',
+            stops: [
+              [{
+                zoom: 5,
+                value: 0
+              }, 5],
+              [{
+                zoom: 5,
+                value: 1
+              }, 6],
+              [{
+                zoom: 5,
+                value: 100
+              }, 8],
+              [{
+                zoom: 5,
+                value: 8000
+              }, 10],
+              [{
+                zoom: 22,
+                value: 0
+              }, 20],
+              [{
+                zoom: 22,
+                value: 1
+              }, 25],
+              [{
+                zoom: 22,
+                value: 100
+              }, 40],
+              [{
+                zoom: 22,
+                value: 8000
+              }, 50],
+            ]
+          },
+          // assign colors to property damage values (manually assigned atm)
+          'circle-color': {
+            property: 'DAMAGE_PROPERTY',
+            type: 'exponential',
+            stops: [
+              [0, '#edf8fb'],
+              [1, '#bfd3e6'],
+              [5, '#9ebcda'],
+              [10, '#8c96c6'],
+              [100, '#8856a7'],
+              [5000, '#810f7c']
+            ]
+          },
+          'circle-stroke-color': 'white',
+          'circle-stroke-width': 1,
+          // make the circle points fade in as heat map layer fades out
+          'circle-opacity': {
+            stops: [
+              [5, 0],
+              [6, 1]
+            ]
+          }
+        }
+      });
+    }
+
+    function addInteraction(storms) {
+      // create popup
+      var popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+      });
+
+      // create a popup to appear when user clicks circle point
+      map.on('mouseenter', 'storms-point', function(e) {
+
+        popup.setLngLat(e.features[0].geometry.coordinates)
+          .setHTML('<b>Storm Type:</b> ' +
+            e.features[0].properties.EVENT_TYPE +
+            '<br>' +
+            '<b>Property Damage in Thousands of USD:</b> ' +
+            e.features[0].properties.DAMAGE_PROPERTY)
+          .addTo(map);
+      });
+
+      map.on('mouseleave', 'storms-point', function(e) {
+        popup.remove();
+      });
+    }
+
+    function addlegend(storms) {
+
+      var damageLabel = ['0 USD', '1000-4999', '5000-9999', '10,000-499,000', '500,000-999,999', '1,000,000+'];
+      var color = ['#edf8fb', '#bfd3e6', '#9ebcda', '#8c96c6', '#8856a7', '#810f7c'];
+
+      // empty stringn for building our list items
+      var listItems = '';
+      // loop through all the colorCodes
+      for (i = 0; i < damageLabel.length; i++) {
+        listItems += "<li class='li h-full txt-m'><span class='w24 h18 mt6 fl mr12' style='background:" + damageLabel[i] + "'></span>" + color[i] + "</li>"
+      }
+      // select the legend ul element and insert the HTML list items
+      d3.select("#legend ul").html(listItems);
+    }
+
+  </script>
+</body>
+
+</html>
